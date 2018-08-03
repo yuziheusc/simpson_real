@@ -331,6 +331,14 @@ def logistic_regression(X, Y):
 
     return lr.params, lr.pvalues, compute_mean_of_error(lr, Y, X)
 
+## added yuzi he
+## use linear model instead of logestic model.
+def linear_regression(X,Y):
+    linear_model = sm.OLS(Y,X)
+    lr = linear_model.fit()
+    pvals = lr.pvalues
+    params = lr.params
+    return lr.params, lr.pvalues, lr.ssr/len(Y)
 
 def find_trend_simpsons_pairs(pairs):
     print ""
@@ -356,7 +364,10 @@ def find_trend_simpsons_pairs(pairs):
             X = np.array([X]).T
             X = sm.tools.tools.add_constant(X, has_constant='add')
             Y = df[target_variable].values
-            agg_params, agg_pvalues, agg_error = logistic_regression(X, Y)
+            
+            #agg_params, agg_pvalues, agg_error = logistic_regression(X, Y)
+            agg_params, agg_pvalues, agg_error = linear_regression(X, Y)
+            
             aggregated_vars_params[var] = {}
             aggregated_vars_params[var]["params"], aggregated_vars_params[var]["pvalues"], aggregated_vars_params[var]["error"] = agg_params, agg_pvalues, agg_error
 
@@ -376,8 +387,10 @@ def find_trend_simpsons_pairs(pairs):
             X = np.array([X]).T
             X = sm.tools.tools.add_constant(X, has_constant='add')
             Y = the_df[target_variable].values
-            pars, pval, err = logistic_regression(X, Y)
-
+            
+            # pars, pval, err = logistic_regression(X, Y)
+            pars, pval, err = linear_regression(X, Y)
+			
             disagg_params.append(pars)
             disagg_pvalues.append(pval)
             disagg_errors.append(err)
