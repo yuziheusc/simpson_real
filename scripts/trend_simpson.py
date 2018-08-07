@@ -50,15 +50,15 @@ def read_the_bining_file(file_name):
         possible_values_df[csv_row[0]][-1] = possible_values_df[csv_row[0]][-1][:-1]
         for ind in range(len(possible_values_df[csv_row[0]])):
             possible_values_df[csv_row[0]][ind] = float(possible_values_df[csv_row[0]][ind])
-        #print possible_values_df[csv_row[0]]
+
     possible_values_df[csv_row[0][:-1]] = possible_values_df[csv_row[0]]
-    #print possible_values_df
-    
+
+
 def different_vals_of(var):
     if var in possible_values_df:
-        arr = list(possible_values_df[var])
-        arr[0] = arr[0] - 0.001
-        return arr
+        arr = possible_values_df[var]
+        arr[0] = arr[0] - 1
+        return list(arr)
     return None
 
 
@@ -218,8 +218,6 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
 
         
         print "\t Drawing pcolormesh plots"
-        print "possible_values:", possible_values
-        print "conditioning_groups",conditioning_groups
         for x in range(len(possible_values) - 1):
             for y in range(len(conditioning_groups) - 1):
                 lvar, rvar = possible_values[x], possible_values[x + 1]
@@ -235,7 +233,7 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
 
         cmap1 = cm.bwr
         cmap1.set_bad('lightgray', 1.)
-        im = ax[0].pcolormesh(np.array([possible_values[0:]] * (len(conditioning_groups) - 0)), np.array([conditioning_groups[0:]] * (len(possible_values) - 0)).T, mat_mean,
+        im = ax[0].pcolormesh(np.array([possible_values[1:]] * (len(conditioning_groups) - 1)), np.array([conditioning_groups[1:]] * (len(possible_values) - 1)).T, mat_mean,
 	                            vmin=mat_mean.min() - 0.01,
 	                            vmax=mat_mean.max() + 0.01,
 	                            cmap = cmap1)
@@ -248,7 +246,7 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
 
         cmap2 = cm.YlGn
         cmap2.set_bad('lightgray', 1.)
-        im = ax[1].pcolormesh(np.array([possible_values[0:]] * (len(conditioning_groups) - 0)), np.array([conditioning_groups[0:]] * (len(possible_values) - 0)).T, mat_freq,
+        im = ax[1].pcolormesh(np.array([possible_values[1:]] * (len(conditioning_groups) - 1)), np.array([conditioning_groups[1:]] * (len(possible_values) - 1)).T, mat_freq,
 	                            norm=clrs.LogNorm(vmin=1, vmax=mat_freq.max()),
 	                            cmap = cmap2)
 
@@ -477,6 +475,14 @@ def chi_sq_deviance():
         df_dagg = len(different_vals_of(cond))
         print "Chi-squared test for pair", key, ": agg = ", (1 - chi2.cdf(chi_agg, df_agg)), " disagg = ", (1 - chi2.cdf(chi_dagg, df_dagg))
 
+        ## pass condition:
+        ##   1. f_a < f_da.
+        ##     disaggregated model has higher likelyhood
+        ##   2. (1 - chi2.cdf(chi_agg, df_agg)) < level_of_significance
+        ##     aggregated model is statistically significant
+        ##   3. (1 - chi2.cdf(chi_dagg, df_dagg)) < level_of_significance
+        ##     disaggregated model is statistically significant
+        
         if f_a < f_da and (1 - chi2.cdf(chi_agg, df_agg)) < level_of_significance and (1 - chi2.cdf(chi_dagg, df_dagg)) < level_of_significance:
             print "\t Pass"
             finalized_pairs.append((var, cond))
