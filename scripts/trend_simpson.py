@@ -50,15 +50,15 @@ def read_the_bining_file(file_name):
         possible_values_df[csv_row[0]][-1] = possible_values_df[csv_row[0]][-1][:-1]
         for ind in range(len(possible_values_df[csv_row[0]])):
             possible_values_df[csv_row[0]][ind] = float(possible_values_df[csv_row[0]][ind])
-
+        #print possible_values_df[csv_row[0]]
     possible_values_df[csv_row[0][:-1]] = possible_values_df[csv_row[0]]
-
-
+    #print possible_values_df
+    
 def different_vals_of(var):
     if var in possible_values_df:
-        arr = copy.copy(possible_values_df[var])
-        arr[0] = arr[0] - 1
-        return list(arr)
+        arr = list(possible_values_df[var])
+        arr[0] = arr[0] - 0.001
+        return arr
     return None
 
 
@@ -218,6 +218,8 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
 
         
         print "\t Drawing pcolormesh plots"
+        print "possible_values:", possible_values
+        print "conditioning_groups",conditioning_groups
         for x in range(len(possible_values) - 1):
             for y in range(len(conditioning_groups) - 1):
                 lvar, rvar = possible_values[x], possible_values[x + 1]
@@ -233,7 +235,7 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
 
         cmap1 = cm.bwr
         cmap1.set_bad('lightgray', 1.)
-        im = ax[0].pcolormesh(np.array([possible_values] * len(conditioning_groups)), np.array([conditioning_groups] * len(possible_values)).T, mat_mean,
+        im = ax[0].pcolormesh(np.array([possible_values[0:]] * (len(conditioning_groups) - 0)), np.array([conditioning_groups[0:]] * (len(possible_values) - 0)).T, mat_mean,
 	                            vmin=mat_mean.min() - 0.01,
 	                            vmax=mat_mean.max() + 0.01,
 	                            cmap = cmap1)
@@ -246,7 +248,7 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
 
         cmap2 = cm.YlGn
         cmap2.set_bad('lightgray', 1.)
-        im = ax[1].pcolormesh(np.array([possible_values] * len(conditioning_groups)), np.array([conditioning_groups] * len(possible_values)).T, mat_freq,
+        im = ax[1].pcolormesh(np.array([possible_values[0:]] * (len(conditioning_groups) - 0)), np.array([conditioning_groups[0:]] * (len(possible_values) - 0)).T, mat_freq,
 	                            norm=clrs.LogNorm(vmin=1, vmax=mat_freq.max()),
 	                            cmap = cmap2)
 
@@ -546,8 +548,7 @@ if __name__ == "__main__":
     # Reading info from input_info.txt
     target_variable, level_of_significance, name_of_the_variables, log_scales = read_input_info()
 
-
-    # Finding all Trend Simpson's Pairs
+    # Finding all Trend Simpson's Pairs 
     pairs = set_paradox_conditioning_pairs(name_of_the_variables)
     trend_simpsons_pairs, aggregated_vars_params, disaggregated_vars_params = find_trend_simpsons_pairs(pairs)
     store_all_info(trend_simpsons_pairs, aggregated_vars_params, disaggregated_vars_params)
