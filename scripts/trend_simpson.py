@@ -157,7 +157,10 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
             y_err.append(e)
         
         x_hat = np.arange((possible_values[0] + possible_values[1]) / 2, (possible_values[-2] + possible_values[-1]) / 2, float(possible_values[-1] - possible_values[0]) / 100.0)
-        y_hat = 1 / (1 + np.exp(-(coef * x_hat + inter)))
+        #y_hat = 1 / (1 + np.exp(-(coef * x_hat + inter)))
+        ## modified by yuzi he, logestic function changed to linear
+        y_hat = coef * x_hat + inter
+
         plt.plot(x_hat, y_hat, linewidth=1, linestyle='dashed', color='k',label='logistic fit')
         plt.errorbar(np.array(np.array(possible_values[1:]) + np.array(possible_values[:-1])) / 2, y_actual, yerr=[y_err, y_err], alpha=0.75, color='black', label='data', fmt='o')
         plt.xlabel(var)
@@ -195,7 +198,11 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         	
             if len(X_lables) > 1:
                 x_hat = np.arange((X_lables[0] + X_lables[1]) / 2, (X_lables[-2] + X_lables[-1]) / 2, float(X_lables[-1] - X_lables[0]) / 100.0)
-                y_hat = 1 / (1 + np.exp(-(coefs[coefs_ind] * x_hat + inters[coefs_ind])))
+                
+                #y_hat = 1 / (1 + np.exp(-(coefs[coefs_ind] * x_hat + inters[coefs_ind])))
+                ## modified by yuzi he, logestic function changed to linear
+                y_hat =  coefs[coefs_ind] * x_hat + inters[coefs_ind]
+
                 plt.plot(x_hat, y_hat, color=(colorr,0,1.0 - colorr), linewidth=1, linestyle='dashed')
             coefs_ind += 1
 
@@ -331,14 +338,15 @@ def logistic_regression(X, Y):
 
     return lr.params, lr.pvalues, compute_mean_of_error(lr, Y, X)
 
-## added yuzi he
+## added by Yuzi He
 ## use linear model instead of logestic model.
+## return: 1. regression parameters; 2. p-values; 3. sum of square residuals
 def linear_regression(X,Y):
     linear_model = sm.OLS(Y,X)
     lr = linear_model.fit()
     pvals = lr.pvalues
     params = lr.params
-    return lr.params, lr.pvalues, lr.ssr/len(Y)
+    return lr.params, lr.pvalues, lr.ssr
 
 def find_trend_simpsons_pairs(pairs):
     print ""
@@ -413,6 +421,20 @@ def find_trend_simpsons_pairs(pairs):
 
     return trend_simpsons_pairs, aggregated_vars_params, disaggregated_vars_params
 
+def show_f_stat_rannking(pairs, f_stat_ranking):
+    print ""
+    print "###########################################################"
+    print "## F-stat of dissaggregation ranking for finalized pairs ##"
+    print "###########################################################"
+    print ""
+    mvar = np.unique([i[0] for i in pairs])
+    for var in mvar: 
+        for key, dr in f_stat_ranking[::-1]:
+            if key.startswith(var + ","):
+                print key, float("{0:.2f}".format(dr))
+        print "------------------------------"
+    
+
 def show_deviance_ranking(pairs, deviance_ranking):
     print ""
     print "######################################################"
@@ -427,6 +449,17 @@ def show_deviance_ranking(pairs, deviance_ranking):
                 print key, float("{0:.2f}".format(dr))
         print "------------------------------"
 
+def ranking_f_stat(finalized_pairs):
+    tmp = load_info("f_stat.obj")
+    goodness_disagg = tmp['goodness_disagg']
+
+    rank = dict()
+    for var,cond in finalized_pairs:
+        key = var + "," + cond
+        rank[key] = goodness_disagg[key]
+
+    return sorted(rank.iteritems(), key = lambda (k,v): (v,k))
+    
 
 def ranking_deviance(finalized_pairs):
     tmp = load_info("loglikelihoods.obj")
@@ -448,6 +481,59 @@ def ranking_deviance(finalized_pairs):
     return sorted(rank.iteritems(), key=lambda (k,v): (v,k))
 
 
+## added by Yuzi He
+## do F-test on the simpson's pair which are found.
+## return: the finalized pairs. which are the paris passed the test.
+def f_test():
+    from scipy.stats import f as fdist
+    
+    print ""
+    print "################################################################################"
+    print "########### Applying F-Test to all pairs and finding finalized ones. ###########"
+    print "################################################################################"
+    print ""
+
+    tmp = load_info("f_stat.obj")
+
+    full_agg = tmp['full_agg']
+    full_disagg = tmp['full_disagg']
+    goodness_disagg = tmp['goodness_disagg']
+    n_bin = tmp['n_bin']
+    n_data = tmp['n_data']
+    finalized_pairs = []
+
+    
+    for pair in full_disagg:
+        print "pair = ", pair
+        
+        var, cond = pair.split(',')[0], pair.split(',')[1]
+        
+        ## test the f-value of aggregated regression
+        f_agg = full_agg[var]
+        p1 = 1.0
+        p2 = 2.0
+        n = n_data
+
+        pass_agg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance)
+
+        ## test the f-value of disagregated regression
+        f_disagg = full_disagg[pair]
+        p1 = 1.0*n_bin[pair]
+        p2 = 2.0*n_bin[pair]
+        n = n_data
+
+        pass_disagg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance)
+
+        print "F-test for pair", pair, ": agg = ", 1 - fdist.cdf(f_agg, p2-p1, n-p2), " disagg = ", 1 - fdist.cdf(f_agg, p2-p1, n-p2)
+        
+        if(pass_agg and pass_disagg):
+            print "\t Pass"
+            finalized_pairs.append((var, cond))
+        else:
+            print "\t Not pass"
+            
+    return finalized_pairs
+        
 def chi_sq_deviance():
     print ""
     print "################################################################################"
@@ -490,7 +576,81 @@ def chi_sq_deviance():
             print "\t Not pass"
     return finalized_pairs
 
+## added by Yuzi He
+## use f-stat to check significance and filter simpson's paradox pair
+## store all the f-stat into a json file called "f_stat.obj"
+def f_stat_all_pairs(pairs, aggregated_vars_params, disaggregated_vars_params):
+    print ""
+    print "##############################################################################################"
+    print "##### Computing F-stat for full / null, aggregated / disaggregated models for all pairs. #####"
+    print "##############################################################################################"
+    print ""
 
+    y_bar =  np.mean(df[target_variable].values)
+    y_s2 = np.var(df[target_variable].values) 
+    n = len(df[target_variable].values)
+    
+    null_agg = dict() 
+    full_agg = dict() # f-stat of aggregate regression against null
+    rss_agg = dict()  # residual sum square of aggregated regression
+    
+    null_disagg = dict()
+    full_disagg = dict() # f-stat of disaggregate regression against null
+
+    goodness_disagg = dict() # f-stat of disaggregate regression against aggregated
+
+    n_bin = dict() # number of bins associated to the simpson's pair
+    
+    for var, cond in pairs:
+        print "Computing F-stat for pair [", var, ", ", cond, "]"
+        
+        ## Aggregated F-stat
+        if var not in null_agg:
+            #b1, b0 = aggregated_vars_params[var]["params"][1], aggregated_vars_params[var]["params"][0]
+
+            #null_agg_tmp = 0.0
+            #full_agg_tmp = 0.0
+            
+            rss1 = n * y_s2
+            rss2 = aggregated_vars_params[var]["error"]
+            p1 = 1.0
+            p2 = 2.0
+            f_tmp = ((rss1-rss2)/(p2-p1))/(rss2/(n-p2))
+            full_agg[var] = f_tmp
+            rss_agg[var] = rss2
+            
+        ## Disaggregated F-stat
+        conditioning_groups = different_vals_of(cond)
+        n_bin[var + "," + cond] = len(conditioning_groups) - 1
+        rss1 = 0.0
+        rss2 = 0.0
+        p1 = 1.0*(len(conditioning_groups) - 1)
+        p2 = 2.0*(len(conditioning_groups) - 1)
+        for ind in range(len(conditioning_groups) - 1):
+            df_j = df.loc[(df[cond] > conditioning_groups[ind]) & (df[cond] <= conditioning_groups[ind + 1])]
+            y_bar_j =  np.mean(df_j[target_variable].values)
+            y_s2_j = np.var(df_j[target_variable].values) 
+            n_j = len(df_j[target_variable].values)
+            rss1 += n_j * y_s2_j
+            rss2 += disaggregated_vars_params[var + "," + cond]["errors"][ind]
+        f_tmp = ((rss1-rss2)/(p2-p1))/(rss2/(n-p2))
+        full_disagg[var + "," + cond] = f_tmp
+
+        ## F-stat of disaggregated vs aggregated
+        rss1 = rss_agg[var]
+        rss2 = rss2
+        p1 = 2.0
+        p2 = 2.0*(len(conditioning_groups) - 1)
+        f_tmp = ((rss1-rss2)/(p2-p1))/(rss2/(n-p2))
+        goodness_disagg[var + "," + cond] = f_tmp
+        
+        #print "aggregated(null/full):", full_agg[var], " disaggregated(null/full):", full_disagg[var + "," + cond],
+
+        print "aggregated(null/full): %6.3f disaggregated(null/full): %6.3f goodness of disaggregated: %6.3f"%(full_agg[var],full_disagg[var + "," + cond], goodness_disagg[var + "," + cond])
+
+    store_info("f_stat.obj", {'full_agg': full_agg, 'full_disagg': full_disagg, 'goodness_disagg' : goodness_disagg, 'n_bin' : n_bin, 'n_data':n})
+
+    
 def deviance_all_pairs(pairs, aggregated_vars_params, disaggregated_vars_params):
     print ""
     print "##############################################################################################"
@@ -577,14 +737,20 @@ if __name__ == "__main__":
     print trend_simpsons_pairs
 
     # Finding finalized pairs based on Deviace chi-squared measure
-    deviance_all_pairs(trend_simpsons_pairs, aggregated_vars_params, disaggregated_vars_params)
-    finalized_pairs = chi_sq_deviance()
+    #deviance_all_pairs(trend_simpsons_pairs, aggregated_vars_params, disaggregated_vars_params)
+    f_stat_all_pairs(trend_simpsons_pairs, aggregated_vars_params, disaggregated_vars_params)
+
+    #finalized_pairs = chi_sq_deviance()
+    finalized_pairs = f_test()
+    
     print "Number of all finalized pairs: ", len(finalized_pairs)
     print finalized_pairs
 
     # Ranking for pairs 
-    deviance_ranking = ranking_deviance(finalized_pairs)
-    show_deviance_ranking(finalized_pairs, deviance_ranking)
+    #deviance_ranking = ranking_deviance(finalized_pairs)
+    f_stat_ranking = ranking_f_stat(finalized_pairs)
+    #show_deviance_ranking(finalized_pairs, deviance_ranking)
+    show_f_stat_rannking(finalized_pairs, f_stat_ranking)
     
     # Drawing charts for finalized pairs
     draw(finalized_pairs, aggregated_vars_params, disaggregated_vars_params, log_scales)
