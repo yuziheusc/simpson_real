@@ -119,6 +119,11 @@ def compute_mean_std(var, lvar, rvar, cond = -1, lcond = -1, rcond = -1, confide
     else:
         a = df.loc[(df[cond] > lcond) & (df[cond] <= rcond)].loc[(df[var] > lvar) & (df[var] <= rvar)][target_variable].values
     n = len(a)
+
+    if(n<=1):
+        return np.nan, np.nan
+    
+    print "COMPUTE MEAN STD, N = ", n
     se = stats.sem(a)
     h = se * stats.t._ppf((1+confidence)/2., n-1)
     return np.mean(a), h
@@ -187,9 +192,14 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
             if ind >= max_group:
                 break
             X_lables = possible_values[(bisect.bisect_left(possible_values, X.min()) - 1):(bisect.bisect_right(possible_values, X.max()) + 1)]
+
+            print "PLOT OK"
+            print "len X = ", len(X)
+            
             y_actual, y_err = [], []
             for indx in range(len(X_lables)-1): 
                 m, e = compute_mean_std(var, X_lables[indx], X_lables[indx + 1], cond, conditioning_groups[ind], conditioning_groups[ind + 1])
+                print "MEAN STD = ", m, e
                 y_actual.append(m)
                 y_err.append(e)
 
@@ -204,6 +214,9 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
                 y_hat =  coefs[coefs_ind] * x_hat + inters[coefs_ind]
 
                 plt.plot(x_hat, y_hat, color=(colorr,0,1.0 - colorr), linewidth=1, linestyle='dashed')
+            #else:
+            #    y_hat = np.nan
+                
             coefs_ind += 1
 
         plt.xlabel(var)
@@ -232,8 +245,12 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
                 lvar, rvar = possible_values[x], possible_values[x + 1]
                 lcond, rcond = conditioning_groups[y], conditioning_groups[y + 1]
                 target_array = df.loc[(df[cond] > lcond) & (df[cond] <= rcond)].loc[(df[var] > lvar) & (df[var] <= rvar)][target_variable].values
-                mat_mean[y][x] = np.mean(target_array)
-                mat_freq[y][x] = len(target_array) 
+                if(len(target_array) <= 1):
+                    mat_mean[y][x] = np.nan
+                    mat_freq[y][x] = 0
+                else:
+                    mat_mean[y][x] = np.mean(target_array)
+                    mat_freq[y][x] = len(target_array) 
 
         mat_mean = np.ma.masked_where(np.isnan(mat_mean),mat_mean)
 
