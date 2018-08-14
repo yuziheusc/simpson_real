@@ -440,11 +440,11 @@ def find_trend_simpsons_pairs(pairs):
 
     return trend_simpsons_pairs, aggregated_vars_params, disaggregated_vars_params
 
-def show_f_stat_rannking(pairs, f_stat_ranking):
+def show_r2_rannking(pairs, f_stat_ranking):
     print ""
-    print "###########################################################"
-    print "## F-stat of dissaggregation ranking for finalized pairs ##"
-    print "###########################################################"
+    print "###############################################################"
+    print "## R2 improve of dissaggregation ranking for finalized pairs ##"
+    print "###############################################################"
     print ""
     mvar = np.unique([i[0] for i in pairs])
     for var in mvar: 
@@ -468,15 +468,18 @@ def show_deviance_ranking(pairs, deviance_ranking):
                 print key, float("{0:.2f}".format(dr))
         print "------------------------------"
 
-def ranking_f_stat(finalized_pairs):
+def ranking_r2_stat(finalized_pairs):
     tmp = load_info("f_stat.obj")
     goodness_disagg = tmp['goodness_disagg']
-
+    r2_agg = tmp['r2_agg']
+    r2_disagg = tmp['r2_disagg']
+    
     rank = dict()
     for var,cond in finalized_pairs:
         key = var + "," + cond
-        rank[key] = goodness_disagg[key]
-
+        #rank[key] = goodness_disagg[key]
+        rank[key] = r2_disagg[key] - r2_agg[var]
+        
     return sorted(rank.iteritems(), key = lambda (k,v): (v,k))
     
 
@@ -545,10 +548,17 @@ def f_test():
 
         pass_disagg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_disagg[pair] > 0.10
 
-        print "F-test for pair", pair, ": agg = ", 1 - fdist.cdf(f_agg, p2-p1, n-p2), " disagg = ", 1 - fdist.cdf(f_agg, p2-p1, n-p2)
-        print "r2_agg = ", r2_agg[var], "r2_disagg = ", r2_disagg[pair]
+        ## test if the improvment of disaggregation over aggregation is significant
+        f_goodness_disagg = goodness_disagg[pair]
+        p1 = 2.0
+        p2 = 2.0 * n_bin[pair]
+        n = n_data
+        pass_goodness_disagg = (1 - fdist.cdf(f_goodness_disagg, p2-p1, n-p2) < level_of_significance)
         
-        if(pass_agg and pass_disagg):
+        print "F-test for pair", pair, ": agg = ", 1 - fdist.cdf(f_agg, p2-p1, n-p2), " disagg = ", 1 - fdist.cdf(f_agg, p2-p1, n-p2)
+        print "r2_agg = ", r2_agg[var], "r2_disagg = ", r2_disagg[pair], "r2_improve = ", r2_disagg[pair]-r2_agg[var]
+        
+        if(pass_agg and pass_disagg and pass_goodness_disagg):
             print "\t Pass"
             finalized_pairs.append((var, cond))
         else:
@@ -770,9 +780,9 @@ if __name__ == "__main__":
 
     # Ranking for pairs 
     #deviance_ranking = ranking_deviance(finalized_pairs)
-    f_stat_ranking = ranking_f_stat(finalized_pairs)
+    r2_ranking = ranking_r2_stat(finalized_pairs)
     #show_deviance_ranking(finalized_pairs, deviance_ranking)
-    show_f_stat_rannking(finalized_pairs, f_stat_ranking)
+    show_r2_rannking(finalized_pairs, r2_ranking)
     
     # Drawing charts for finalized pairs
     draw(finalized_pairs, aggregated_vars_params, disaggregated_vars_params, log_scales)
