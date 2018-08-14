@@ -502,6 +502,8 @@ def f_test():
     goodness_disagg = tmp['goodness_disagg']
     n_bin = tmp['n_bin']
     n_data = tmp['n_data']
+    r2_agg = tmp['r2_agg']
+    r2_disagg = tmp['r2_disagg']
     finalized_pairs = []
 
     
@@ -515,8 +517,8 @@ def f_test():
         p1 = 1.0
         p2 = 2.0
         n = n_data
-
-        pass_agg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance)
+        
+        pass_agg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_agg[var] > 0.10
 
         ## test the f-value of disagregated regression
         f_disagg = full_disagg[pair]
@@ -524,9 +526,10 @@ def f_test():
         p2 = 2.0*n_bin[pair]
         n = n_data
 
-        pass_disagg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance)
+        pass_disagg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_disagg[pair] > 0.10
 
         print "F-test for pair", pair, ": agg = ", 1 - fdist.cdf(f_agg, p2-p1, n-p2), " disagg = ", 1 - fdist.cdf(f_agg, p2-p1, n-p2)
+        print "r2_agg = ", r2_agg[var], "r2_disagg = ", r2_disagg[pair]
         
         if(pass_agg and pass_disagg):
             print "\t Pass"
@@ -591,6 +594,9 @@ def f_stat_all_pairs(pairs, aggregated_vars_params, disaggregated_vars_params):
     null_disagg = dict()
     full_disagg = dict() # f-stat of disaggregate regression against null
 
+    r2_agg = dict()
+    r2_disagg = dict() # r2 value of the fitting
+    
     goodness_disagg = dict() # f-stat of disaggregate regression against aggregated
 
     n_bin = dict() # number of bins associated to the simpson's pair
@@ -612,6 +618,7 @@ def f_stat_all_pairs(pairs, aggregated_vars_params, disaggregated_vars_params):
             f_tmp = ((rss1-rss2)/(p2-p1))/(rss2/(n-p2))
             full_agg[var] = f_tmp
             rss_agg[var] = rss2
+            r2_agg[var] = 1.0 - rss2/(n*y_s2)
             
         ## Disaggregated F-stat
         conditioning_groups = different_vals_of(cond)
@@ -629,7 +636,8 @@ def f_stat_all_pairs(pairs, aggregated_vars_params, disaggregated_vars_params):
             rss2 += disaggregated_vars_params[var + "," + cond]["errors"][ind]
         f_tmp = ((rss1-rss2)/(p2-p1))/(rss2/(n-p2))
         full_disagg[var + "," + cond] = f_tmp
-
+        r2_disagg[var + "," + cond] = 1.0 - rss2/(n*y_s2)
+        
         ## F-stat of disaggregated vs aggregated
         rss1 = rss_agg[var]
         rss2 = rss2
@@ -637,12 +645,15 @@ def f_stat_all_pairs(pairs, aggregated_vars_params, disaggregated_vars_params):
         p2 = 2.0*(len(conditioning_groups) - 1)
         f_tmp = ((rss1-rss2)/(p2-p1))/(rss2/(n-p2))
         goodness_disagg[var + "," + cond] = f_tmp
+
+        print "rss2 = ", rss2, "rss1 = ", rss1
+        print "n = ", n, "p1 = ", p1, "p2 = ", p2
         
         #print "aggregated(null/full):", full_agg[var], " disaggregated(null/full):", full_disagg[var + "," + cond],
 
         print "aggregated(null/full): %6.3f disaggregated(null/full): %6.3f goodness of disaggregated: %6.3f"%(full_agg[var],full_disagg[var + "," + cond], goodness_disagg[var + "," + cond])
 
-    store_info("f_stat.obj", {'full_agg': full_agg, 'full_disagg': full_disagg, 'goodness_disagg' : goodness_disagg, 'n_bin' : n_bin, 'n_data':n})
+    store_info("f_stat.obj", {'full_agg': full_agg, 'full_disagg': full_disagg, 'goodness_disagg' : goodness_disagg, 'n_bin' : n_bin, 'n_data':n, 'r2_agg':r2_agg, 'r2_disagg':r2_disagg})
 
     
 def deviance_all_pairs(pairs, aggregated_vars_params, disaggregated_vars_params):
