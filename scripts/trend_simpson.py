@@ -179,6 +179,19 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         pp.savefig(bbox_inches='tight', papertype='a4')
         plt.close()
 
+        ## modified by Yuzi He
+        ## plot the original data points
+        plt.clf()
+        plt.scatter(df[var], df[target_variable], s=0.5, c='C0')
+        x1 = np.arange(min(df[var]), max(df[var]), (max(df[var])-min(df[var]))*0.01)
+        y1 = x1 * aggregated_vars_params[var]['params'][1] + aggregated_vars_params[var]["params"][0]
+        plt.plot(x1,y1,'b--')
+        plt.xlabel(var)
+        plt.ylabel(target_variable)
+        pp.savefig(bbox_inches='tight', papertype='a4')
+        plt.close()
+        ## end plot original data
+        
         print "\t Drawing chart disaggregated"
         disaggregated_vars_params[var + "," + cond]["params"] = np.array(disaggregated_vars_params[var + "," + cond]["params"])
         coefs = disaggregated_vars_params[var + "," + cond]["params"][:, 1]
@@ -232,6 +245,29 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         pp.savefig(bbox_inches='tight', papertype='a4')
         plt.close()
 
+        ## modified by Yuzi He
+        ## plot the original data points, for cond groups
+        plt.clf()
+        for ind in range(len(conditioning_groups) - 1):
+            # X = df.loc[(df[cond] > conditioning_groups[ind]) & (df[cond] <= conditioning_groups[ind + 1])][var].values
+            locs = df.loc[(df[cond] > conditioning_groups[ind]) & (df[cond] <= conditioning_groups[ind + 1])]
+            X = locs[var].values
+            Y = locs[target_variable].values
+            plt.scatter(X, Y, s=0.5, c='C'+str(ind))
+            x1 = np.arange(min(X), max(X), (max(X)-min(X))*0.01)
+            y1 = x1*coefs[ind] + inters[ind]
+            plt.plot(x1,y1,'C'+str(ind)+'--',label="Bin "+str(ind))
+            #plt.plot(x1,y1,'b--')
+
+        plt.xlabel(var)
+        plt.ylabel(target_variable)
+        plt.legend(loc='best')
+        plt.title("Condition On "+cond)
+        pp.savefig(bbox_inches='tight', papertype='a4')
+        plt.close()
+        ## end plot original data, cond
+        
+        
         # Drawing Pcolormesh Plot 
         mat_mean = np.zeros((len(conditioning_groups) - 1, len(possible_values) - 1))
         mat_freq = np.zeros((len(conditioning_groups) - 1, len(possible_values) - 1))
