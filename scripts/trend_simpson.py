@@ -536,11 +536,16 @@ def show_r2_rannking(pairs, f_stat_ranking):
     print "## R2 improve of dissaggregation ranking for finalized pairs ##"
     print "###############################################################"
     print ""
+    tmp = load_info("f_stat.obj")
+    goodness_disagg = tmp['goodness_disagg']
+    r2_agg = tmp['r2_agg']
+    r2_disagg = tmp['r2_disagg']
     mvar = np.unique([i[0] for i in pairs])
     for var in mvar: 
         for key, dr in f_stat_ranking[::-1]:
             if key.startswith(var + ","):
-                print key, float("{0:.4f}".format(dr))
+                #print key, float("{0:.4f}".format(dr)), float("{0:.4f}".format(r2_agg[var])), float("{0:.4f}".format(r2_disagg[key]))
+                print "%60s %6.4f %6.4f %6.4f"%(key, r2_agg[var], r2_disagg[key], dr)
         print "------------------------------"
     
 
@@ -628,7 +633,7 @@ def f_test():
         p2 = 2.0
         n = n_data
         
-        pass_agg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_agg[var] > 0.10
+        pass_agg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_agg[var] > 0.02
 
         ## test the f-value of disagregated regression
         f_disagg = full_disagg[pair]
@@ -636,7 +641,7 @@ def f_test():
         p2 = 2.0*n_bin[pair]
         n = n_data
 
-        pass_disagg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_disagg[pair] > 0.10
+        pass_disagg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_disagg[pair] > 0.02
 
         ## test if the improvment of disaggregation over aggregation is significant
         f_goodness_disagg = goodness_disagg[pair]
