@@ -13,8 +13,11 @@ from matplotlib.ticker import FormatStrFormatter
 from scipy.stats import chi2
 import matplotlib.colors as clrs
 import json
+import os
+import shutil
 
-df = pd.DataFrame()  
+df = pd.DataFrame()
+r2_cutoff = 0.0  
 possible_values_df = dict()
 target_variable = None
 markers = ['o','v','+','s','p','x','h','d','o','v','+','s','p','x','h','d']
@@ -63,6 +66,7 @@ def different_vals_of(var):
 
 
 def read_input_info():
+    global r2_cutoff
     print ""
     print "######################################"
     print "## Reading Data and Input_info file ##"
@@ -77,7 +81,9 @@ def read_input_info():
     name_of_the_variables = read_the_csv_file("../input/" + input_json_info["csv_file_name"] + ".csv", target_variable, input_json_info["ignore_columns"])
     read_the_bining_file("../temporary_files/" + input_json_info["csv_file_name"] + "/bins.csv")
     log_scales = input_json_info["log_scales"]
-
+	
+    r2_cutoff = input_json_info["r2_cutoff"]
+	
     print "Reading complete."
 
     return target_variable, level_of_significance, name_of_the_variables, log_scales
@@ -136,6 +142,11 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
     print "###################################"
     print ""
 
+    ## add by Yuzi He
+    ## first previously output the folder.
+    if(os.path.exists("../output/")):
+        shutil.rmtree("../output/")
+    os.mkdir("../output/")
     for var, cond in trend_simpsons_pair:
     	# Making first page
     	print "Making", str(var + '-vs-' + cond + '.pdf'), " file "
@@ -191,6 +202,20 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         pp.savefig(bbox_inches='tight', papertype='a4')
         plt.close()
         ## end plot original data
+        
+        ## modified by Yuzi HE
+        ## plot the predicted, residual
+        plt.clf()
+        x1 = df[var]
+        y_pred = x1 * aggregated_vars_params[var]['params'][1] + aggregated_vars_params[var]["params"][0]
+        #y1 = np.arange(min(df[target_variable]),max(df[target_variable]),(max(df[target_variable])-min(df[target_variable]))*0.01)
+        #plt.plot(y1,y1,'b--')
+        plt.scatter(y_pred, df[target_variable]-y_pred,  s = 5.0, c='g', alpha=0.4, linewidth=0.0)
+        plt.xlabel("Residual")
+        plt.ylabel("Observed")
+        plt.title("Aggregated Regression")
+        pp.savefig(bbox_inches='tight', papertype='a4')        
+        ##
 
         ## modified by Yuzi HE
         ## plot the predicted, observed
@@ -228,7 +253,7 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
             y_actual, y_err = [], []
             for indx in range(len(X_lables)-1): 
                 m, e = compute_mean_std(var, X_lables[indx], X_lables[indx + 1], cond, conditioning_groups[ind], conditioning_groups[ind + 1])
-                print "MEAN STD = ", m, e
+                print "#MEAN STD = ", m, e
                 y_actual.append(m)
                 y_err.append(e)
 
@@ -633,15 +658,15 @@ def f_test():
         p2 = 2.0
         n = n_data
         
-        pass_agg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_agg[var] > 0.02
-
+        pass_agg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_agg[var] > r2_cutoff
+        
         ## test the f-value of disagregated regression
         f_disagg = full_disagg[pair]
         p1 = 1.0*n_bin[pair]
         p2 = 2.0*n_bin[pair]
         n = n_data
 
-        pass_disagg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_disagg[pair] > 0.02
+        pass_disagg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_disagg[pair] > r2_cutoff
 
         ## test if the improvment of disaggregation over aggregation is significant
         f_goodness_disagg = goodness_disagg[pair]
