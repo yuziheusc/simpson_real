@@ -14,7 +14,7 @@ from scipy.stats import chi2
 import matplotlib.colors as clrs
 import json
 
-df = pd.DataFrame()
+df = pd.DataFrame()  
 possible_values_df = dict()
 target_variable = None
 markers = ['o','v','+','s','p','x','h','d','o','v','+','s','p','x','h','d']
@@ -180,7 +180,7 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         plt.close()
 
         ## modified by Yuzi He
-        ## plot the original data points
+        ## plot the original data points, x-y
         plt.clf()
         plt.scatter(df[var], df[target_variable], s=0.5, c='C0')
         x1 = np.arange(min(df[var]), max(df[var]), (max(df[var])-min(df[var]))*0.01)
@@ -191,6 +191,22 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         pp.savefig(bbox_inches='tight', papertype='a4')
         plt.close()
         ## end plot original data
+
+        ## modified by Yuzi HE
+        ## plot the predicted, observed
+        plt.clf()
+        x1 = df[var]
+        y_pred = x1 * aggregated_vars_params[var]['params'][1] + aggregated_vars_params[var]["params"][0]
+        y1 = np.arange(min(df[target_variable]),max(df[target_variable]),(max(df[target_variable])-min(df[target_variable]))*0.01)
+        plt.plot(y1,y1,'b--')
+        plt.scatter(y_pred, df[target_variable],  s = 5.0, c='g', alpha=0.4, linewidth=0.0)
+        plt.xlabel("Predicted")
+        plt.ylabel("Observed")
+        plt.title("Aggregated Regression")
+        plt.axis('equal')
+        pp.savefig(bbox_inches='tight', papertype='a4')        
+        ##
+        
         
         print "\t Drawing chart disaggregated"
         disaggregated_vars_params[var + "," + cond]["params"] = np.array(disaggregated_vars_params[var + "," + cond]["params"])
@@ -227,7 +243,7 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
                 y_hat =  coefs[coefs_ind] * x_hat + inters[coefs_ind]
 
                 plt.plot(x_hat, y_hat, color=(colorr,0,1.0 - colorr), linewidth=1, linestyle='dashed')
-            #else:
+            #else: 
             #    y_hat = np.nan
                 
             coefs_ind += 1
@@ -258,7 +274,7 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
             y1 = x1*coefs[ind] + inters[ind]
             plt.plot(x1,y1,'C'+str(ind)+'--',label="Bin "+str(ind))
             #plt.plot(x1,y1,'b--')
-
+        
         plt.xlabel(var)
         plt.ylabel(target_variable)
         plt.legend(loc='best')
@@ -266,6 +282,44 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         pp.savefig(bbox_inches='tight', papertype='a4')
         plt.close()
         ## end plot original data, cond
+
+        ## modified by Yuzi He
+        ## plot predicted - observed
+        plt.clf()
+        for ind in range(len(conditioning_groups)-1):
+            locs = df.loc[(df[cond] > conditioning_groups[ind]) & (df[cond] <= conditioning_groups[ind + 1])]
+            X = locs[var].values
+            Y = locs[target_variable].values
+            y_pred = X*coefs[ind] + inters[ind]
+            plt.scatter(y_pred, Y, s = 5.0, c='C'+str(ind), alpha=0.4, linewidth=0.0, label="Bin "+str(ind))
+        y1 = np.arange(min(df[target_variable]),max(df[target_variable]),(max(df[target_variable])-min(df[target_variable]))*0.01)
+        plt.plot(y1,y1,'b--')
+        plt.xlabel("Predicted")
+        plt.ylabel("Observed")
+        plt.legend(loc='best')
+        plt.title("Disaggregated Regression")
+        plt.axis('equal')
+        pp.savefig(bbox_inches='tight', papertype='a4')
+        plt.close()
+        ## end plot predicted - observed
+
+        ## modified by Yuzi He
+        ## plot predicted - residual
+        plt.clf()
+        for ind in range(len(conditioning_groups)-1):
+            locs = df.loc[(df[cond] > conditioning_groups[ind]) & (df[cond] <= conditioning_groups[ind + 1])]
+            X = locs[var].values
+            Y = locs[target_variable].values
+            y_pred = X*coefs[ind] + inters[ind]
+            plt.scatter(y_pred, Y-y_pred, s = 5.0, c='C'+str(ind), alpha=0.4, linewidth=0.0, label="Bin "+str(ind))
+            
+        plt.xlabel("Predicted")
+        plt.ylabel("Residual")
+        plt.legend(loc='best')
+        plt.title("Disaggregated Regression")
+        pp.savefig(bbox_inches='tight', papertype='a4')
+        plt.close()
+        ## end plot predicted - residual
         
         
         # Drawing Pcolormesh Plot 
@@ -486,7 +540,7 @@ def show_r2_rannking(pairs, f_stat_ranking):
     for var in mvar: 
         for key, dr in f_stat_ranking[::-1]:
             if key.startswith(var + ","):
-                print key, float("{0:.2f}".format(dr))
+                print key, float("{0:.4f}".format(dr))
         print "------------------------------"
     
 
