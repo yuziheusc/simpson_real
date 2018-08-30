@@ -16,6 +16,7 @@ import json
 import os
 import shutil
 
+data_file_name = "NULL"
 df = pd.DataFrame()
 r2_cutoff = 0.0  
 possible_values_df = dict()
@@ -29,6 +30,9 @@ markers = ['o','v','+','s','p','x','h','d','o','v','+','s','p','x','h','d']
 
 def read_the_csv_file(file_name, tar_var, drop_variables = None, filter_variables = None):
     global df
+    global data_file_name
+
+    data_file_name = file_name
     df = pd.read_csv(file_name)
     if drop_variables:
         df = df.drop(drop_variables, axis=1)
@@ -565,6 +569,7 @@ def find_trend_simpsons_pairs(pairs):
     return trend_simpsons_pairs, aggregated_vars_params, disaggregated_vars_params
 
 def show_r2_rannking(pairs, f_stat_ranking):
+    global data_file_name
     print ""
     print "###############################################################"
     print "## R2 improve of dissaggregation ranking for finalized pairs ##"
@@ -584,6 +589,7 @@ def show_r2_rannking(pairs, f_stat_ranking):
 
     ## write to a file pair.txt
     with open("../pair.txt","w") as fpou:
+        fpou.write("DATASET %s\n\n"%(data_file_name.split("/")[-1]))
         for var in mvar:
             for key, dr in f_stat_ranking[::-1]:
                 if(key.startswith(var + ",") and dr > 0.10):
