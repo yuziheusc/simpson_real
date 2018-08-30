@@ -579,7 +579,7 @@ def show_r2_rannking(pairs, f_stat_ranking):
         for key, dr in f_stat_ranking[::-1]:
             if key.startswith(var + ","):
                 #print key, float("{0:.4f}".format(dr)), float("{0:.4f}".format(r2_agg[var])), float("{0:.4f}".format(r2_disagg[key]))
-                print "%60s %6.4f %6.4f %6.4f"%(key, r2_agg[var], r2_disagg[key], dr)
+                print "%s    %60s %6.4f %6.4f %6.4f"%(target_variable ,key, r2_agg[var], r2_disagg[key], dr)
         print "------------------------------"
 
     ## write to a file pair.txt
@@ -587,7 +587,7 @@ def show_r2_rannking(pairs, f_stat_ranking):
         for var in mvar:
             for key, dr in f_stat_ranking[::-1]:
                 if(key.startswith(var + ",") and dr > 0.10):
-                    buf = "%60s %6.4f %6.4f %6.4f\n"%(key, r2_agg[var], r2_disagg[key], dr) 
+                    buf = "%s    %60s %6.4f %6.4f %6.4f\n"%(target_variable ,key, r2_agg[var], r2_disagg[key], dr) 
                     fpou.write(buf)
     
 def show_deviance_ranking(pairs, deviance_ranking):
