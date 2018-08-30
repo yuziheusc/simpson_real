@@ -177,11 +177,11 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         ## modified by yuzi he, logestic function changed to linear
         y_hat = coef * x_hat + inter
 
-        plt.plot(x_hat, y_hat, linewidth=1, linestyle='dashed', color='k',label='logistic fit')
+        plt.plot(x_hat, y_hat, linewidth=1, linestyle='dashed', color='k',label='linear fit')
         plt.errorbar(np.array(np.array(possible_values[1:]) + np.array(possible_values[:-1])) / 2, y_actual, yerr=[y_err, y_err], alpha=0.75, color='black', label='data', fmt='o')
         plt.xlabel(var)
         plt.ylabel(target_variable)
-
+            
         if log_scales[var]:
             plt.xscale('log')
 
@@ -199,6 +199,10 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         plt.plot(x1,y1,'b--')
         plt.xlabel(var)
         plt.ylabel(target_variable)
+
+        if log_scales[var]:
+            plt.xscale('log')
+            
         pp.savefig(bbox_inches='tight', papertype='a4')
         plt.close()
         ## end plot original data
@@ -211,8 +215,8 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         #y1 = np.arange(min(df[target_variable]),max(df[target_variable]),(max(df[target_variable])-min(df[target_variable]))*0.01)
         #plt.plot(y1,y1,'b--')
         plt.scatter(y_pred, df[target_variable]-y_pred,  s = 5.0, c='g', alpha=0.4, linewidth=0.0)
-        plt.xlabel("Residual")
-        plt.ylabel("Observed")
+        plt.xlabel("Predicted")
+        plt.ylabel("Residual")
         plt.title("Aggregated Regression")
         pp.savefig(bbox_inches='tight', papertype='a4')        
         ##
@@ -301,7 +305,12 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
             #plt.plot(x1,y1,'b--')
         
         plt.xlabel(var)
+        if log_scales[var]:
+            plt.xscale('log')
+            
         plt.ylabel(target_variable)
+
+        
         plt.legend(loc='best')
         plt.title("Condition On "+cond)
         pp.savefig(bbox_inches='tight', papertype='a4')
