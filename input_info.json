@@ -33,7 +33,7 @@
 		"households_1decile":0,
 		"households_topdecile":0,
 		"households_medianIncome":1,
-		"households_meanIncome":0,
+		"households_meanIncome":1,
 		"population":0,
 		"employment":0,
 		"employment_percent":0,
