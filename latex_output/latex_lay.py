@@ -109,7 +109,15 @@ if __name__ == "__main__":
         buf = "\\end{table}"
         print buf
         fpou.write(buf+"\n")
-                
+
+    with open("summary_data.txt", "w") as fpou:
+        for entry in pair_list:
+            pred_var = entry[0]
+            pred_cond = entry[1]
+            pair = (entry[0], entry[1])
+            type_label = paradox_type_list[pair]
+            buf = "%s, %s %s %6.4g %6.4g %6.4g %6.4g %6.4g %6.4f %6.4f %6.4f"%(pred_var, pred_cond, type_label , k_agg[(pred_var,"NULL")], k_multi[pair], (k_multi[pair]/k_agg[(pred_var,"NULL")] - 1)*100 , pvalue_agg[(pred_var,"NULL")], pvalue_multi[pair], r2_agg_list[pair], r2_multi_list[pair], r2_dis_list[pair])
+            fpou.write(buf+"\n")
         
         ## output the plots for aggregated, disaggregated fitting.
     with open("regression_out.txt", "w") as fpou:
