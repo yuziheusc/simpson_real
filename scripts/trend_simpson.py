@@ -185,9 +185,10 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         plt.errorbar(np.array(np.array(possible_values[1:]) + np.array(possible_values[:-1])) / 2, y_actual, yerr=[y_err, y_err], alpha=0.75, color='black', label='data', fmt='o')
         plt.xlabel(var)
         plt.ylabel(target_variable)
-            
-        if log_scales[var]:
-            plt.xscale('log')
+
+        if(var in log_scales):
+            if log_scales[var]:
+                plt.xscale('log')
 
         plt.legend(loc='best')
         plt.title(var)
@@ -204,8 +205,9 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
         plt.xlabel(var)
         plt.ylabel(target_variable)
 
-        if log_scales[var]:
-            plt.xscale('log')
+        if(var in log_scales):
+            if log_scales[var]:
+                plt.xscale('log')
             
         pp.savefig(bbox_inches='tight', papertype='a4')
         plt.close()
@@ -282,8 +284,10 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
             coefs_ind += 1
 
         plt.xlabel(var)
-        if log_scales[var]:
-            plt.xscale('log')
+
+        if(var in log_scales):
+            if log_scales[var]:
+                plt.xscale('log')
         
         plt.ylabel(target_variable)
         try:
@@ -309,8 +313,10 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
             #plt.plot(x1,y1,'b--')
         
         plt.xlabel(var)
-        if log_scales[var]:
-            plt.xscale('log')
+
+        if(var in log_scales):
+            if log_scales[var]:
+                plt.xscale('log')
             
         plt.ylabel(target_variable)
 
@@ -393,10 +399,13 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
 	                            cmap = cmap1)
 
         fig.colorbar(im, ax=ax[0])
-        if log_scales[var]:
-            ax[0].set_xscale('log')
-        if log_scales[cond]:
-            ax[0].set_yscale('log')
+        if(var in log_scales):
+            if log_scales[var]:
+                ax[0].set_xscale('log')
+
+        if(cond in log_scales):
+            if log_scales[cond]:
+                ax[0].set_yscale('log')
 
         cmap2 = cm.YlGn
         cmap2.set_bad('lightgray', 1.)
@@ -405,11 +414,14 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
 	                            cmap = cmap2)
 
         fig.colorbar(im, ax=ax[1])
-        if log_scales[var]:
-            ax[0].set_xscale('log')
-            ax[1].set_xscale('log')
-        if log_scales[cond]:
-            ax[1].set_yscale('log')
+
+        if(var in log_scales):
+            if log_scales[var]:
+                ax[0].set_xscale('log')
+                ax[1].set_xscale('log')
+        if(cond in log_scales):
+            if log_scales[cond]:
+                ax[1].set_yscale('log')
 
         fig.add_subplot(111, frameon=False)
         plt.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
