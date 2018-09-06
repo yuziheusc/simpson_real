@@ -9,6 +9,7 @@ if __name__ == "__main__":
     k_multi = {}
     pvalue_agg = {}
     pvalue_multi = {}
+    paradox_type_list = {}
     
     pair_list = []
     with open("pair.txt","r") as fpin1:
@@ -22,10 +23,13 @@ if __name__ == "__main__":
             r2_agg = float(line[2])
             r2_dis = float(line[3])
             r2_ipv = float(line[4])
+            type_label = line[5]
             #print "simpson#", pred_var, pred_cond, r2_agg, r2_dis
             r2_agg_list[(pred_var, pred_cond)] = r2_agg
             r2_dis_list[(pred_var, pred_cond)] = r2_dis
             r2_ipv_list[(pred_var, pred_cond)] = r2_ipv
+            paradox_type_list[(pred_var, pred_cond)] = type_label
+            
             pair_list += [(pred_var, pred_cond, r2_ipv)]
     with open("data_output.txt") as fpin2:
         for line in fpin2:
@@ -56,7 +60,8 @@ if __name__ == "__main__":
             
             print "multireg#", pred_var, pred_cond, r2, k, p
 
-
+    print paradox_type_list
+            
     ## first sort the pars.
     pair_list.sort(key = lambda x : (x[0], -x[2], x[1]))
     #print pair_list
@@ -72,7 +77,7 @@ if __name__ == "__main__":
         fpou.write(buf+"\n")
 
         
-        buf = "  Simpson's Pair & $\\beta_1$(Agg) & $\\beta_1$(Mul)& $\\Delta \\beta_1$  & p-value(Agg)& p-value(Mul)& $R\_{\\text{AGG}}^2$ & $R_{\\text{Mul}}^2$& $R_{\\text{DIS}}^2$\\\\"
+        buf = "  Simpson's Pair & $\\beta_1$(Agg) & $\\beta_1$(Mul)& $\\Delta \\beta_1$  & p-value(Agg)& p-value(Mul)& $R_{\\text{AGG}}^2$ & $R_{\\text{Mul}}^2$& $R_{\\text{DIS}}^2$\\\\"
         buf = "\\hline" + "\n" + buf
         print buf
         fpou.write(buf+"\n")
@@ -82,7 +87,9 @@ if __name__ == "__main__":
             pred_var = entry[0]
             pred_cond = entry[1]
             pair = (entry[0], entry[1])
-            buf = "  %s, %s &  %6.4g & %6.4g & %6.4g\\%%  & %6.4g & %6.4g & %6.4f & %6.4f & %6.4f \\\\"%(pred_var.replace("_","\\_"), pred_cond.replace("_","\\_"), k_agg[(pred_var,"NULL")], k_multi[pair], (k_multi[pair]/k_agg[(pred_var,"NULL")] - 1)*100 , pvalue_agg[(pred_var,"NULL")], pvalue_multi[pair], r2_agg_list[pair], r2_multi_list[pair], r2_dis_list[pair])
+            type_label = paradox_type_list[pair]
+            
+            buf = "  %s, %s $%s$ &  %6.4g & %6.4g & %6.4g\\%%  & %6.4g & %6.4g & %6.4f & %6.4f & %6.4f \\\\"%(pred_var.replace("_","\\_"), pred_cond.replace("_","\\_"), type_label , k_agg[(pred_var,"NULL")], k_multi[pair], (k_multi[pair]/k_agg[(pred_var,"NULL")] - 1)*100 , pvalue_agg[(pred_var,"NULL")], pvalue_multi[pair], r2_agg_list[pair], r2_multi_list[pair], r2_dis_list[pair])
             if(var_current != pred_var):
                 var_current = pred_var
                 buf = "  \\hline"+"\n"+buf
