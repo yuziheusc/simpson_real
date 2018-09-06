@@ -572,11 +572,25 @@ def find_trend_simpsons_pairs(pairs):
         disaggregated_vars_params[var + "," + cond]["pvalues"] = disagg_pvalues 
         disaggregated_vars_params[var + "," + cond]["errors"] = disagg_errors
 
+        # this variable is used to record the type of simpson's error.
+        disaggregated_vars_params[var + "," + cond]["paradox_type"] = "NULL"
+        
         if agg_sign != 0 and (disagg_sign != agg_sign):
             print ""
             print ">>>>> Trend Simpson's instance for var", var, "with conditioning on", cond, "SIGNS: ", agg_sign, disagg_sign, "<<<<<"
             print ""
             trend_simpsons_pairs.append([var, cond])
+
+            label_agg, label_dis = None, None
+            if(agg_sign > 0): label_agg = "+"
+            else: label_agg = "-"
+
+            if(disagg_sign > 0): label_dis = "+"
+            elif(disagg_sign == 0): label_dis = "0"
+            else: label_dis = "-"
+
+            disaggregated_vars_params[var + "," + cond]["paradox_type"] = label_agg + label_dis
+            
 
     return trend_simpsons_pairs, aggregated_vars_params, disaggregated_vars_params
 
@@ -591,12 +605,15 @@ def show_r2_rannking(pairs, f_stat_ranking):
     goodness_disagg = tmp['goodness_disagg']
     r2_agg = tmp['r2_agg']
     r2_disagg = tmp['r2_disagg']
+    paradox_type = tmp["paradox_type"]
+    
     mvar = np.unique([i[0] for i in pairs])
     for var in mvar: 
         for key, dr in f_stat_ranking[::-1]:
             if key.startswith(var + ","):
                 #print key, float("{0:.4f}".format(dr)), float("{0:.4f}".format(r2_agg[var])), float("{0:.4f}".format(r2_disagg[key]))
-                print "%s    %60s %6.4f %6.4f %6.4f"%(target_variable ,key, r2_agg[var], r2_disagg[key], dr)
+                type_label = paradox_type[key]
+                print "%s    %60s %6.4f %6.4f %6.4f %s"%(target_variable ,key, r2_agg[var], r2_disagg[key], dr, type_label)
         print "------------------------------"
 
     ## write to a file pair.txt
@@ -605,7 +622,8 @@ def show_r2_rannking(pairs, f_stat_ranking):
         for var in mvar:
             for key, dr in f_stat_ranking[::-1]:
                 if(key.startswith(var + ",") and dr > 0.10):
-                    buf = "%s    %60s %6.4f %6.4f %6.4f\n"%(target_variable ,key, r2_agg[var], r2_disagg[key], dr) 
+                    type_label = paradox_type[key]
+                    buf = "%s    %60s %6.4f %6.4f %6.4f %s\n"%(target_variable ,key, r2_agg[var], r2_disagg[key], dr, type_label) 
                     fpou.write(buf)
     
 def show_deviance_ranking(pairs, deviance_ranking):
@@ -781,6 +799,8 @@ def f_stat_all_pairs(pairs, aggregated_vars_params, disaggregated_vars_params):
     goodness_disagg = dict() # f-stat of disaggregate regression against aggregated
 
     n_bin = dict() # number of bins associated to the simpson's pair
+
+    paradox_type = dict() # store the type of the paradox. "+0","-0","+-","-+" 
     
     for var, cond in pairs:
         print "Computing F-stat for pair [", var, ", ", cond, "]"
@@ -827,6 +847,9 @@ def f_stat_all_pairs(pairs, aggregated_vars_params, disaggregated_vars_params):
         f_tmp = ((rss1-rss2)/(p2-p1))/(rss2/(n-p2))
         goodness_disagg[var + "," + cond] = f_tmp
 
+        # store the paradox type
+        paradox_type[var + "," + cond] = disaggregated_vars_params[var + "," + cond]["paradox_type"]
+
         print "rss2 = ", rss2, "rss1 = ", rss1
         print "n = ", n, "p1 = ", p1, "p2 = ", p2
         
@@ -834,7 +857,7 @@ def f_stat_all_pairs(pairs, aggregated_vars_params, disaggregated_vars_params):
 
         print "aggregated(null/full): %6.3f disaggregated(null/full): %6.3f goodness of disaggregated: %6.3f"%(full_agg[var],full_disagg[var + "," + cond], goodness_disagg[var + "," + cond])
 
-    store_info("f_stat.obj", {'full_agg': full_agg, 'full_disagg': full_disagg, 'goodness_disagg' : goodness_disagg, 'n_bin' : n_bin, 'n_data':n, 'r2_agg':r2_agg, 'r2_disagg':r2_disagg})
+    store_info("f_stat.obj", {'full_agg': full_agg, 'full_disagg': full_disagg, 'goodness_disagg' : goodness_disagg, 'n_bin' : n_bin, 'n_data':n, 'r2_agg':r2_agg, 'r2_disagg':r2_disagg, "paradox_type":paradox_type })
 
     
 def deviance_all_pairs(pairs, aggregated_vars_params, disaggregated_vars_params):
