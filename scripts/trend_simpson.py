@@ -19,6 +19,7 @@ import shutil
 data_file_name = "NULL"
 df = pd.DataFrame()
 r2_cutoff = 0.0  
+dr2_cutoff = 0.0
 possible_values_df = dict()
 target_variable = None
 markers = ['o','v','+','s','p','x','h','d','o','v','+','s','p','x','h','d']
@@ -71,6 +72,7 @@ def different_vals_of(var):
 
 def read_input_info():
     global r2_cutoff
+    global dr2_cutoff
     print ""
     print "######################################"
     print "## Reading Data and Input_info file ##"
@@ -87,7 +89,7 @@ def read_input_info():
     log_scales = input_json_info["log_scales"]
 	
     r2_cutoff = input_json_info["r2_cutoff"]
-	
+    dr2_cutoff = input_json_info["dr2_cutoff"]
     print "Reading complete."
 
     return target_variable, level_of_significance, name_of_the_variables, log_scales
@@ -621,9 +623,9 @@ def show_r2_rannking(pairs, f_stat_ranking):
         fpou.write("DATASET %s\n\n"%(data_file_name.split("/")[-1]))
         for var in mvar:
             for key, dr in f_stat_ranking[::-1]:
-                if(key.startswith(var + ",") and dr > 0.10):
+                if(key.startswith(var + ",") and dr > dr2_cutoff):
                     type_label = paradox_type[key]
-                    buf = "%s    %60s %6.4f %6.4f %6.4f %s\n"%(target_variable ,key, r2_agg[var], r2_disagg[key], dr, type_label) 
+                    buf = "%s    %60s %6.4f %6.4f %6.4f %s\n"%(target_variable ,key, r2_agg[var], r2_disagg[key], dr, type_label)
                     fpou.write(buf)
     
 def show_deviance_ranking(pairs, deviance_ranking):

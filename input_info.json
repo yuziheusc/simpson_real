@@ -1,5 +1,6 @@
 {	
 	"r2_cutoff" : 0.05,
+	"dr2_cutoff" : 0.10,
 	"num_of_bins": 20,
 	"least_num_of_datapoints_in_each_bin": 40,
 	"target_variable": "meanvalence",
