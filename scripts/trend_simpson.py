@@ -308,10 +308,12 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
             locs = df.loc[(df[cond] > conditioning_groups[ind]) & (df[cond] <= conditioning_groups[ind + 1])]
             X = locs[var].values
             Y = locs[target_variable].values
-            plt.scatter(X, Y, s=0.5, c='C'+str(ind))
+            colorr = float(float(ind + 1)/float(min(max_group, len(conditioning_groups))))
+            print "color = ",ind,max_group,len(conditioning_groups) ,[colorr,0,1.0 - colorr]
+            plt.scatter(X, Y, s=0.5, c=np.array([[colorr,0,1.0 - colorr]]) )
             x1 = np.arange(min(X), max(X), (max(X)-min(X))*0.01)
             y1 = x1*coefs[ind] + inters[ind]
-            plt.plot(x1,y1,'C'+str(ind)+'--',label="Bin "+str(ind))
+            plt.plot(x1,y1,color=(colorr,0,1.0 - colorr),linestyle='dashed',label="Bin "+str(ind))
             #plt.plot(x1,y1,'b--')
         
         plt.xlabel(var)
@@ -337,7 +339,8 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
             X = locs[var].values
             Y = locs[target_variable].values
             y_pred = X*coefs[ind] + inters[ind]
-            plt.scatter(y_pred, Y, s = 5.0, c='C'+str(ind), alpha=0.4, linewidth=0.0, label="Bin "+str(ind))
+            colorr = float(float(ind + 1)/float(min(max_group, len(conditioning_groups))))
+            plt.scatter(y_pred, Y, s = 5.0, c=np.array([[colorr,0,1.0 - colorr]]), alpha=0.4, linewidth=0.0, label="Bin "+str(ind))
         y1 = np.arange(min(df[target_variable]),max(df[target_variable]),(max(df[target_variable])-min(df[target_variable]))*0.01)
         plt.plot(y1,y1,'b--')
         plt.xlabel("Predicted")
@@ -357,7 +360,8 @@ def draw(trend_simpsons_pair, aggregated_vars_params, disaggregated_vars_params,
             X = locs[var].values
             Y = locs[target_variable].values
             y_pred = X*coefs[ind] + inters[ind]
-            plt.scatter(y_pred, Y-y_pred, s = 5.0, c='C'+str(ind), alpha=0.4, linewidth=0.0, label="Bin "+str(ind))
+            colorr = float(float(ind + 1)/float(min(max_group, len(conditioning_groups))))
+            plt.scatter(y_pred, Y-y_pred, s = 5.0, c=np.array([[colorr,0,1.0 - colorr]]), alpha=0.4, linewidth=0.0, label="Bin "+str(ind))
             
         plt.xlabel("Predicted")
         plt.ylabel("Residual")
