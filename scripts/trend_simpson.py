@@ -631,6 +631,16 @@ def show_r2_rannking(pairs, f_stat_ranking):
                     type_label = paradox_type[key]
                     buf = "%s    %60s %6.4f %6.4f %6.4f %s\n"%(target_variable ,key, r2_agg[var], r2_disagg[key], dr, type_label)
                     fpou.write(buf)
+
+    ## write to a file all_pair.txt
+    with open("../all_pair.txt","w") as fpou:
+        fpou.write("DATASET %s\n\n"%(data_file_name.split("/")[-1]))
+        for var in mvar:
+            for key, dr in f_stat_ranking[::-1]:
+                if(key.startswith(var + ",")):
+                    type_label = paradox_type[key]
+                    buf = "%s    %60s %6.4f %6.4f %6.4f %s\n"%(target_variable ,key, r2_agg[var], r2_disagg[key], dr, type_label)
+                    fpou.write(buf)
     
 def show_deviance_ranking(pairs, deviance_ranking):
     print ""
