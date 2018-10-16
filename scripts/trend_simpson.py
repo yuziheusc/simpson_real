@@ -734,7 +734,7 @@ def f_test():
         p2 = 2.0*n_bin[pair]
         n = n_data
 
-        pass_disagg = (1 - fdist.cdf(f_agg, p2-p1, n-p2) < level_of_significance) and r2_disagg[pair] > r2_cutoff
+        pass_disagg = (1 - fdist.cdf(f_disagg, p2-p1, n-p2) < level_of_significance) and r2_disagg[pair] > r2_cutoff
 
         ## test if the improvment of disaggregation over aggregation is significant
         f_goodness_disagg = goodness_disagg[pair]
