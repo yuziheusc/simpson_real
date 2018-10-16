@@ -746,7 +746,7 @@ def f_test():
         print "F-test for pair", pair, ": agg = ", 1 - fdist.cdf(f_agg, p2-p1, n-p2), " disagg = ", 1 - fdist.cdf(f_agg, p2-p1, n-p2)
         print "r2_agg = ", r2_agg[var], "r2_disagg = ", r2_disagg[pair], "r2_improve = ", r2_disagg[pair]-r2_agg[var]
         
-        if(pass_agg and pass_disagg and pass_goodness_disagg):
+        if(pass_agg and pass_goodness_disagg):
             print "\t Pass"
             finalized_pairs.append((var, cond))
         else:
